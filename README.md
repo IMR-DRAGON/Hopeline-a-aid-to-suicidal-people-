@@ -1,105 +1,70 @@
-# 🌿 HopeLine — Setup Guide
+# 🌿 HopeLine — Mental Health Support Platform
 
-A suicide prevention & mental health support platform for teens and young adults.
-Built with HTML, CSS, PHP, MySQL (XAMPP).
-
----
-
-## 📁 File Structure
-
-```
-hopeline/
-├── index.html          ← Main frontend (single-page app)
-├── config.php          ← Database + API config (EDIT THIS)
-├── auth.php            ← Login / Register / Logout
-├── chat.php            ← AI chat backend (LongCat API)
-├── journal.php         ← Mood journal backend
-├── forum.php           ← Community forum backend
-├── peer_chat.php       ← Anonymous peer support backend
-├── safety_plan.php     ← Safety Plan backend
-├── session_check.php   ← Session status check
-└── database.sql        ← Run this to set up your database
-```
+HopeLine is a suicide prevention and mental health support platform designed to provide a safe, anonymous space for teens and young adults. It integrates an empathetic AI companion (Mehjabeen), an anonymous peer support network, and a variety of self-help tools.
 
 ---
 
-## 🚀 Setup Steps
-
-### 1. Install & Start XAMPP
-- Download XAMPP from https://www.apachefriends.org
-- Start **Apache** and **MySQL** in the XAMPP control panel
-
-### 2. Create the Database
-- Open your browser → go to `http://localhost/phpmyadmin`
-- Click **"New"** (left sidebar) → create database named `hopeline`
-- Click on the `hopeline` database
-- Click **"Import"** tab → choose `database.sql` → click **Go**
-- ✅ All tables are now created
-
-### 3. Place Files
-- Copy the entire `hopeline/` folder into:
-  - **Windows**: `C:\xampp\htdocs\hopeline\`
-  - **Mac**: `/Applications/XAMPP/htdocs/hopeline/`
-  - **Linux**: `/opt/lampp/htdocs/hopeline/`
-
-### 4. Configure the App
-Open `config.php` and edit:
-
-```php
-define('AI_API_KEY', 'ak_2Bl7ew0UM1SE7pi1zP5bR6z35Ai0K');  // ← paste your key here
-define('AI_API_URL', 'https://api.longcat.ai/v1/chat/completions'); // adjust if needed
-define('AI_MODEL',   'LongCat-Flash-Thinking-2601');  // ← use your LongCat model name
-```
-
-If your MySQL has a password (not default XAMPP):
-```php
-define('DB_PASS', 'your_mysql_password');
-```
-
-### 5. Open the App
-- Browser → `http://localhost/hopeline/`
-- Register an account → Start using HopeLine!
-
----
-
-## 🔧 LongCat AI API Notes
-
-Your LongCat AI API likely follows OpenAI-compatible format.
-- Check your LongCat dashboard for the correct **base URL** and **model name**
-- Common model names: `gpt-4o`, `claude-3-5-sonnet`, etc.
-- Update `AI_API_URL` and `AI_MODEL` in `config.php` accordingly
-
----
-
-## 🌿 Features
+## ✨ Key Features
 
 | Feature | Description |
 |---------|-------------|
-| 🤖 AI Chat (Mehjabeen) | Compassionate AI companion, crisis-aware, always recommends help |
-| 📓 Mood Journal | Daily mood tracking (1–5 scale), private entries, mood trend chart |
-| 📞 Hotlines | Bangladesh + international crisis lines, coping strategies |
-| 🤝 Community Forum | Anonymous posting, replies, heart reactions |
-| 🛡️ Safety Plan | Personalized step-by-step crisis plan to keep users safe |
+| 🤖 **AI Support (Mehjabeen)** | A compassionate, crisis-aware AI companion that provides immediate emotional support and crisis intervention. |
+| 🤝 **Anonymous Peer Chat** | Connects users anonymously for mutual peer support, allowing them to share experiences in a safe environment. |
+| 🛡️ **Personalized Safety Plan** | A guided tool to help users create a step-by-step crisis plan for when they are in distress. |
+| 📓 **Mood Tracker & Journal** | Private daily mood logging with trends to help users monitor their emotional well-being. |
+| 📞 **Emergency Hub** | Quick access to verified international and local (Bangladesh) crisis helplines. |
+| 🗨️ **Community Forum** | An anonymous space for community discussion, support threads, and encouragement. |
 
 ---
 
-## 🔒 Security Notes
+## 🛠️ Technology Stack
 
-- Passwords are hashed with bcrypt (secure)
-- All DB queries use PDO prepared statements (SQL injection safe)
-- HTML output is escaped (XSS safe)
-- For production: add HTTPS, rate limiting, and email verification
-
----
-
-## 📞 Crisis Resources (Pre-loaded)
-
-- 🇧🇩 Kaan Pete Roi: **01779-554391**
-- 🇧🇩 Bangladesh Emergency: **999**
-- 🌏 iCall: **+91-9152987821**
-- 🌐 Befrienders Worldwide: befrienders.org
-- 🇧🇩 NIMH Helpline: **16789**
+- **Backend**: PHP (7.4+)
+- **Database**: MySQL / MariaDB
+- **Frontend**: HTML5, Vanilla CSS3, Javascript (ES6)
+- **AI Integration**: LongCat API (OpenAI-compatible)
+- **Security**: Password hashing (Bcrypt), Prepared Statements (PDO), XSS prevention.
 
 ---
 
-Built with 💚 for mental health support.
+## 🚀 Installation & Local Setup (XAMPP)
+
+### 1. Prerequisites
+- [XAMPP](https://www.apachefriends.org/) (Apache + MySQL)
+
+### 2. Database Configuration
+1. Open [phpMyAdmin](http://localhost/phpmyadmin).
+2. Create a new database named `hopeline`.
+3. Import the `database.sql` file provided in the repository.
+
+### 3. Application Setup
+1. Clone this repository into your XAMPP `htdocs` folder:
+   ```bash
+   git clone https://github.com/IMR-DRAGON/Hopeline-a-aid-to-suicidal-people-.git
+   ```
+2. Navigate to the project folder and copy `config.php.example` to `config.php`:
+   ```bash
+   cp config.php.example config.php
+   ```
+3. Edit `config.php` and provide your **LongCat API Key**.
+4. Open your browser and go to `http://localhost/hopeline`.
+
+---
+
+## 📋 Security & API Notes
+
+- **API Keys**: Never commit your `config.php` file. It is added to `.gitignore` to keep your credentials private.
+- **Privacy**: User identities are kept anonymous where possible to encourage open communication.
+
+---
+
+## 🌍 Crisis Resources (Pre-loaded)
+
+- 🇧🇩 **Bangladesh Emergency**: 999
+- 🇧🇩 **Kaan Pete Roi**: 01779-554391
+- 🇧🇩 **NIMH Helpline**: 16789
+- 🌐 **International**: [Befrienders Worldwide](https://www.befrienders.org)
+
+---
+
+Built with 💚 for mental health awareness.
