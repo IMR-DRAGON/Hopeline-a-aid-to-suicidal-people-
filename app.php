@@ -1478,15 +1478,77 @@ if (!is_logged_in()) {
 
     .breathing-card {
       background: var(--white);
-      padding: 60px;
+      padding: 60px 40px;
       border-radius: 40px;
       box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: 100px 1fr 100px;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 700px;
+      position: relative;
+    }
+
+    .breathing-timer-wrap, .breathing-counter-wrap {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 30px;
-      width: 100%;
-      max-width: 500px;
+      gap: 8px;
+    }
+
+    .stat-circle {
+      width: 70px;
+      height: 70px;
+      border: 3px solid var(--sage-pale);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--sage-deep);
+      position: relative;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-soft);
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .breathing-info-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .breathing-steps {
+        display: flex;
+        gap: 15px;
+        margin-top: 10px;
+    }
+
+    .step-dot {
+        padding: 5px 12px;
+        border-radius: 20px;
+        background: var(--sage-pale);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-soft);
+        opacity: 0.5;
+        transition: all 0.3s;
+    }
+
+    .step-dot.active {
+        background: var(--sage-deep);
+        color: var(--white);
+        opacity: 1;
+        transform: scale(1.1);
     }
 
     .circle-container {
@@ -1503,11 +1565,12 @@ if (!is_logged_in()) {
       height: 120px;
       background: var(--sage);
       border-radius: 50%;
-      transition: transform 0.5s ease-in-out, background-color 0.5s ease;
+      transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1), background-color 1s ease;
       display: flex;
       align-items: center;
       justify-content: center;
       box-shadow: 0 0 30px rgba(124, 152, 133, 0.3);
+      z-index: 2;
     }
 
     .circle-outer {
@@ -1517,6 +1580,7 @@ if (!is_logged_in()) {
       border: 2px dashed var(--sage-light);
       border-radius: 50%;
       opacity: 0.3;
+      z-index: 1;
     }
 
     .breathing-text {
@@ -1995,17 +2059,38 @@ if (!is_logged_in()) {
         <p class="section-sub">Take a moment for yourself. Try the 4-7-8 breathing technique to calm your mind.</p>
         
         <div class="breathing-card">
-          <div class="circle-container">
-            <div class="circle-outer"></div>
-            <div class="breathing-circle" id="breathing-circle">
-              <span id="breathing-emoji" style="font-size: 40px;">🌿</span>
-            </div>
+          <!-- Left side: Timer -->
+          <div class="breathing-timer-wrap">
+            <div class="stat-circle" id="breathing-timer">0</div>
+            <div class="stat-label">Seconds</div>
           </div>
-          
-          <div class="breathing-text" id="breathing-text">Ready?</div>
-          <div class="breathing-instruction" id="breathing-instruction">Press the button below to begin your grounding session.</div>
-          
-          <button class="btn-start-breathing" id="btn-breathing-control" onclick="toggleBreathing()">Start Session</button>
+
+          <!-- Center: Animation & Instructions -->
+          <div class="breathing-info-center">
+            <div class="circle-container">
+                <div class="circle-outer"></div>
+                <div class="breathing-circle" id="breathing-circle">
+                <span id="breathing-emoji" style="font-size: 40px;">🌿</span>
+                </div>
+            </div>
+            
+            <div class="breathing-text" id="breathing-text">Ready?</div>
+            <div class="breathing-instruction" id="breathing-instruction">Press Start to begin.</div>
+            
+            <div class="breathing-steps">
+                <span class="step-dot" id="step-in">4s In</span>
+                <span class="step-dot" id="step-hold">7s Hold</span>
+                <span class="step-dot" id="step-out">8s Out</span>
+            </div>
+
+            <button class="btn-start-breathing" id="btn-breathing-control" onclick="toggleBreathing()" style="margin-top:10px">Start Session</button>
+          </div>
+
+          <!-- Right side: Counter -->
+          <div class="breathing-counter-wrap">
+            <div class="stat-circle" id="breathing-counter">0</div>
+            <div class="stat-label">Cycles</div>
+          </div>
         </div>
       </div>
     </div>
@@ -2974,8 +3059,8 @@ if (!is_logged_in()) {
     // ════════════════════════════════════════════════
     // GROUNDING (4-7-8 Breathing)
     // ════════════════════════════════════════════════
-    let breathingInterval = null;
     let isBreathing = false;
+    let breathingCount = 0;
 
     function toggleBreathing() {
       const btn = document.getElementById('btn-breathing-control');
@@ -2983,19 +3068,24 @@ if (!is_logged_in()) {
       const instruction = document.getElementById('breathing-instruction');
       const circle = document.getElementById('breathing-circle');
       const emoji = document.getElementById('breathing-emoji');
+      const timer = document.getElementById('breathing-timer');
+      const counter = document.getElementById('breathing-counter');
 
       if (isBreathing) {
         // Stop
-        clearInterval(breathingInterval);
         isBreathing = false;
         btn.textContent = 'Start Session';
         text.textContent = 'Ready?';
-        instruction.textContent = 'Press the button below to begin your grounding session.';
+        instruction.textContent = 'Press Start to begin.';
         circle.style.transform = 'scale(1)';
         emoji.textContent = '🌿';
+        timer.textContent = '0';
+        document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
       } else {
         // Start
         isBreathing = true;
+        breathingCount = 0;
+        counter.textContent = '0';
         btn.textContent = 'Stop Session';
         runBreathingCycle();
       }
@@ -3004,39 +3094,67 @@ if (!is_logged_in()) {
     async function runBreathingCycle() {
       if (!isBreathing) return;
 
+      const timer = document.getElementById('breathing-timer');
       const text = document.getElementById('breathing-text');
       const instruction = document.getElementById('breathing-instruction');
       const circle = document.getElementById('breathing-circle');
       const emoji = document.getElementById('breathing-emoji');
+      const counter = document.getElementById('breathing-counter');
+      const dots = {
+          in: document.getElementById('step-in'),
+          hold: document.getElementById('step-hold'),
+          out: document.getElementById('step-out')
+      };
 
       // 1. Breathe In (4 seconds)
+      setActiveStep(dots, 'in');
       text.textContent = 'Breathe In...';
-      instruction.textContent = 'Slowly fill your lungs with air.';
+      instruction.textContent = 'Fill your lungs with air.';
       emoji.textContent = '🌬️';
       circle.style.transform = 'scale(1.8)';
       circle.style.backgroundColor = 'var(--sage-light)';
-      await sleep(4000);
+      await countdown(4, timer);
       if (!isBreathing) return;
 
       // 2. Hold (7 seconds)
+      setActiveStep(dots, 'hold');
       text.textContent = 'Hold...';
-      instruction.textContent = 'Keep the air inside and stay calm.';
+      instruction.textContent = 'Stay calm and focused.';
       emoji.textContent = '🧘';
       circle.style.backgroundColor = 'var(--sage)';
-      await sleep(7000);
+      await countdown(7, timer);
       if (!isBreathing) return;
 
       // 3. Exhale (8 seconds)
+      setActiveStep(dots, 'out');
       text.textContent = 'Exhale...';
-      instruction.textContent = 'Slowly release all the tension.';
+      instruction.textContent = 'Release all tension.';
       emoji.textContent = '🍃';
       circle.style.transform = 'scale(1)';
       circle.style.backgroundColor = 'var(--sage-pale)';
-      await sleep(8000);
+      await countdown(8, timer);
       if (!isBreathing) return;
+
+      // Increment Cycle
+      breathingCount++;
+      counter.textContent = breathingCount;
+      showToast('Cycle ' + breathingCount + ' complete 🌿');
 
       // Loop
       runBreathingCycle();
+    }
+
+    async function countdown(seconds, element) {
+        for (let i = seconds; i > 0; i--) {
+            if (!isBreathing) return;
+            element.textContent = i;
+            await sleep(1000);
+        }
+        element.textContent = '0';
+    }
+
+    function setActiveStep(dots, active) {
+        Object.keys(dots).forEach(k => dots[k].classList.toggle('active', k === active));
     }
 
     function sleep(ms) {
