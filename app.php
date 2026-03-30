@@ -1,3 +1,10 @@
+<?php
+require_once 'config.php';
+if (!is_logged_in()) {
+    header('Location: index.php');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
