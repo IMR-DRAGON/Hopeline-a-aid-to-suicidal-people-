@@ -1464,8 +1464,97 @@ if (!is_logged_in()) {
     }
 
     /* ═══════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════ */
+       GROUNDING TOOL
+    ═══════════════════════════════════════════════ */
+    .grounding-layout {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      text-align: center;
+      gap: 40px;
+    }
+
+    .breathing-card {
+      background: var(--white);
+      padding: 60px;
+      border-radius: 40px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .circle-container {
+      position: relative;
+      width: 250px;
+      height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .breathing-circle {
+      width: 120px;
+      height: 120px;
+      background: var(--sage);
+      border-radius: 50%;
+      transition: transform 0.5s ease-in-out, background-color 0.5s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 30px rgba(124, 152, 133, 0.3);
+    }
+
+    .circle-outer {
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      border: 2px dashed var(--sage-light);
+      border-radius: 50%;
+      opacity: 0.3;
+    }
+
+    .breathing-text {
+      font-family: 'Lora', serif;
+      font-size: 32px;
+      color: var(--sage-deep);
+      font-weight: 500;
+      height: 48px;
+    }
+
+    .breathing-instruction {
+      font-size: 16px;
+      color: var(--text-soft);
+      font-weight: 400;
+      max-width: 300px;
+    }
+
+    .btn-start-breathing {
+      padding: 14px 32px;
+      background: var(--sage);
+      color: var(--white);
+      border: none;
+      border-radius: 50px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 16px;
+    }
+
+    .btn-start-breathing:hover {
+      background: var(--sage-deep);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(124, 152, 133, 0.3);
+    }
+    
+    /* ═══════════════════════════════════════════════
+    RESPONSIVE
+    ═══════════════════════════════════════════════ */
     @media (max-width: 600px) {
       .auth-card {
         padding: 32px 22px;
@@ -1578,6 +1667,7 @@ if (!is_logged_in()) {
         <button class="nav-tab" onclick="showTab('safety')" id="tab-safety">🛡️ <span class="label">Safety
             Plan</span></button>
         <button class="nav-tab" onclick="showTab('peer')" id="tab-peer">👥 <span class="label">Peer Chat</span></button>
+        <button class="nav-tab" onclick="showTab('grounding')" id="tab-grounding">🌬️ <span class="label">Grounding</span></button>
       </div>
       <div class="topnav-user">
         <button onclick="toggleDarkMode()" id="btn-dark-mode"
@@ -1896,6 +1986,28 @@ if (!is_logged_in()) {
       </div>
 
       <div id="forum-posts-list"></div>
+    </div>
+
+    <!-- ── Grounding Tool (Pause & Breathe) ─────────────────── -->
+    <div class="tab-panel" id="panel-grounding">
+      <div class="grounding-layout">
+        <h1 class="section-title">Pause & Breathe</h1>
+        <p class="section-sub">Take a moment for yourself. Try the 4-7-8 breathing technique to calm your mind.</p>
+        
+        <div class="breathing-card">
+          <div class="circle-container">
+            <div class="circle-outer"></div>
+            <div class="breathing-circle" id="breathing-circle">
+              <span id="breathing-emoji" style="font-size: 40px;">🌿</span>
+            </div>
+          </div>
+          
+          <div class="breathing-text" id="breathing-text">Ready?</div>
+          <div class="breathing-instruction" id="breathing-instruction">Press the button below to begin your grounding session.</div>
+          
+          <button class="btn-start-breathing" id="btn-breathing-control" onclick="toggleBreathing()">Start Session</button>
+        </div>
+      </div>
     </div>
 
   </div><!-- /#app -->
@@ -2857,6 +2969,78 @@ if (!is_logged_in()) {
         document.getElementById('peer-status-text').textContent = 'Session Closed';
         leaveBtn.style.display = 'none';
       }
+    }
+
+    // ════════════════════════════════════════════════
+    // GROUNDING (4-7-8 Breathing)
+    // ════════════════════════════════════════════════
+    let breathingInterval = null;
+    let isBreathing = false;
+
+    function toggleBreathing() {
+      const btn = document.getElementById('btn-breathing-control');
+      const text = document.getElementById('breathing-text');
+      const instruction = document.getElementById('breathing-instruction');
+      const circle = document.getElementById('breathing-circle');
+      const emoji = document.getElementById('breathing-emoji');
+
+      if (isBreathing) {
+        // Stop
+        clearInterval(breathingInterval);
+        isBreathing = false;
+        btn.textContent = 'Start Session';
+        text.textContent = 'Ready?';
+        instruction.textContent = 'Press the button below to begin your grounding session.';
+        circle.style.transform = 'scale(1)';
+        emoji.textContent = '🌿';
+      } else {
+        // Start
+        isBreathing = true;
+        btn.textContent = 'Stop Session';
+        runBreathingCycle();
+      }
+    }
+
+    async function runBreathingCycle() {
+      if (!isBreathing) return;
+
+      const text = document.getElementById('breathing-text');
+      const instruction = document.getElementById('breathing-instruction');
+      const circle = document.getElementById('breathing-circle');
+      const emoji = document.getElementById('breathing-emoji');
+
+      // 1. Breathe In (4 seconds)
+      text.textContent = 'Breathe In...';
+      instruction.textContent = 'Slowly fill your lungs with air.';
+      emoji.textContent = '🌬️';
+      circle.style.transform = 'scale(1.8)';
+      circle.style.backgroundColor = 'var(--sage-light)';
+      await sleep(4000);
+      if (!isBreathing) return;
+
+      // 2. Hold (7 seconds)
+      text.textContent = 'Hold...';
+      instruction.textContent = 'Keep the air inside and stay calm.';
+      emoji.textContent = '🧘';
+      circle.style.backgroundColor = 'var(--sage)';
+      await sleep(7000);
+      if (!isBreathing) return;
+
+      // 3. Exhale (8 seconds)
+      text.textContent = 'Exhale...';
+      instruction.textContent = 'Slowly release all the tension.';
+      emoji.textContent = '🍃';
+      circle.style.transform = 'scale(1)';
+      circle.style.backgroundColor = 'var(--sage-pale)';
+      await sleep(8000);
+      if (!isBreathing) return;
+
+      // Loop
+      runBreathingCycle();
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     // ════════════════════════════════════════════════
