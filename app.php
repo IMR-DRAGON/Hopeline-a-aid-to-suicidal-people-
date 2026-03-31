@@ -1803,6 +1803,80 @@ if (!is_logged_in()) {
       line-height: 1.5;
     }
 
+    /* Sensory Game */
+    .sense-game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .sense-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 500px;
+      justify-content: center;
+      min-height: 200px;
+      align-content: center;
+    }
+
+    .sense-item {
+      width: 80px;
+      height: 80px;
+      background: var(--white);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: 1px solid var(--warm-mid);
+      user-select: none;
+      animation: floatSense 4s infinite ease-in-out;
+    }
+
+    .sense-item:hover {
+      transform: scale(1.1) translateY(-5px);
+      box-shadow: 0 10px 20px rgba(124, 152, 133, 0.15);
+      border-color: var(--sage);
+    }
+
+    .sense-item.tapped {
+      background: var(--sage-pale);
+      border-color: var(--sage);
+      transform: scale(0.9);
+      opacity: 0.6;
+      pointer-events: none;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .sense-progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--warm-mid);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .sense-progress-fill {
+      height: 100%;
+      background: var(--sage);
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    @keyframes floatSense {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
     .btn-insights {
       padding: 8px 16px;
       background: var(--sage-deep);
@@ -2366,6 +2440,14 @@ if (!is_logged_in()) {
             <div class="stat-label">Cycles</div>
           </div>
         </div>
+
+        <!-- 5-4-3-2-1 Sensory Card -->
+        <div class="breathing-card" style="margin-top:30px; display:flex; flex-direction:column; align-items:center; text-align:center; padding:40px;">
+          <div class="icon-circle" style="width:64px; height:64px; font-size:32px; background:var(--sage-pale); color:var(--sage-deep); margin-bottom:20px;">🧩</div>
+          <h2 style="font-family:'Lora',serif; color:var(--sage-deep); margin-bottom:8px;">5-4-3-2-1 Grounding</h2>
+          <p class="section-sub" style="max-width:500px; margin-bottom:24px;">Ground yourself in the present by interacting with calming images. A quick, engaging way to quiet a busy mind.</p>
+          <button class="btn-primary" style="padding:14px 32px; border-radius:14px; width:auto;" onclick="startSensoryGame()">Start Sensory Grounding ✨</button>
+        </div>
       </div>
     </div>
 
@@ -2391,6 +2473,40 @@ if (!is_logged_in()) {
     </div>
 
   </div><!-- /#app -->
+
+  <!-- ── 5-4-3-2-1 Sensory Modal ───────────────────── -->
+  <div class="modal-overlay" id="sensory-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-family:'Lora',serif; color:var(--sage-deep)">5-4-3-2-1 Sensory Grounding</h3>
+        <button class="btn-close-modal" onclick="closeSensoryGame()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="sense-game-container">
+          <div id="sense-instructions">
+            <h4 id="sense-title" style="font-family:'Lora',serif; color:var(--sage-deep); font-size:20px; margin-bottom:8px;">Ready?</h4>
+            <p id="sense-description" class="section-sub">We'll use your senses to bring you back to the present. Follow along slowly. 🌿</p>
+          </div>
+
+          <div class="sense-grid" id="sense-grid">
+            <!-- Icons pop in here -->
+          </div>
+
+          <div style="width:100%; max-width:400px;">
+            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:var(--text-soft); margin-bottom:6px;">
+              <span id="sense-progress-text">Step 0/5</span>
+              <span id="sense-tap-text">Ready</span>
+            </div>
+            <div class="sense-progress-bar">
+              <div class="sense-progress-fill" id="sense-progress-fill"></div>
+            </div>
+          </div>
+
+          <button class="btn-primary" id="btn-sense-next" style="width:auto; padding:12px 24px; border-radius:12px;" onclick="nextSenseStep()">Let's Start</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ── Weekly Well-being Report Modal ────────────────── -->
   <div class="modal-overlay" id="report-modal">
@@ -3569,6 +3685,145 @@ if (!is_logged_in()) {
 
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // ──────────────────────────────────────────────
+    // SENSORY AUDIO (Web Audio API)
+    // ──────────────────────────────────────────────
+    let audioCtx = null;
+
+    function playSenseTone(freq, type = 'sine', duration = 0.3, vol = 0.1) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) { /* Audio fallback if blocked */ }
+    }
+
+    function playSuccessChime() {
+      [440, 554, 659, 880].forEach((f, i) => {
+        setTimeout(() => playSenseTone(f, 'sine', 0.8, 0.05), i * 120);
+      });
+    }
+
+    // ──────────────────────────────────────────────
+    // SENSORY GROUNDING (5-4-3-2-1)
+    // ──────────────────────────────────────────────
+    let senseStep = 0;
+    let itemsTapped = 0;
+    const senseData = [
+      { t: "Look: 5 Things You See", d: "Gently tap on 5 items that look peaceful to you.", c: 5, e: ["🌸","🌿","🐦","☁️","🎨","🍃","☀️","🏔️"] },
+      { t: "Touch: 4 Things You Feel", d: "Think about how these would feel. Tap 4 of them.", c: 4, e: ["🧶","🌊","🪵","🔥","🧸","🧊","🧴","🧱"] },
+      { t: "Listen: 3 Things You Hear", d: "Can you imagine their sounds? Tap 3 items.", c: 3, e: ["🔔","🐦","⛈️","🎶","🍃","🌊","🎷","🎻"] },
+      { t: "Smell: 2 Things You Smell", d: "Imagine breathing in these scents. Tap 2 items.", c: 2, e: ["🌹","🌲","☕","🍋","🥨","🧼","🍃","🧴"] },
+      { t: "Taste: 1 Thing You Taste", d: "Focus on one flavor. Tap 1 item.", c: 1, e: ["🍎","🍵","🍯","🍓","🥨","🍇","🍉","🧉"] }
+    ];
+
+    function startSensoryGame() {
+      senseStep = 0;
+      itemsTapped = 0;
+      resetSenseUI();
+    }
+
+    function closeSensoryGame() {
+      document.getElementById('sensory-modal').classList.remove('open');
+    }
+
+    function resetSenseUI() {
+      const modal = document.getElementById('sensory-modal');
+      modal.classList.add('open');
+      document.getElementById('sense-title').textContent = "Ready?";
+      document.getElementById('sense-description').textContent = "We'll use your senses to bring you back to the present. Follow along slowly. 🌿";
+      document.getElementById('sense-grid').innerHTML = '';
+      document.getElementById('sense-progress-text').textContent = "Step 0/5";
+      document.getElementById('sense-progress-fill').style.width = "0%";
+      document.getElementById('btn-sense-next').textContent = "Let's Start";
+      document.getElementById('btn-sense-next').style.display = "block";
+    }
+
+    function nextSenseStep() {
+      if (senseStep >= 5) {
+        closeSensoryGame();
+        return;
+      }
+
+      // Audio feedback for next step
+      playSenseTone(523.25, 'triangle', 0.4, 0.05); // C5 rising chime
+
+      const data = senseData[senseStep];
+      senseStep++;
+      itemsTapped = 0;
+
+      document.getElementById('sense-title').textContent = data.t;
+      document.getElementById('sense-description').textContent = data.d;
+      document.getElementById('btn-sense-next').style.display = "none";
+      document.getElementById('sense-progress-text').textContent = `Step ${senseStep}/5`;
+      document.getElementById('sense-progress-fill').style.width = (senseStep/5 * 100) + "%";
+      document.getElementById('sense-tap-text').textContent = `0 / ${data.c} tapped`;
+
+      renderSenses(data);
+    }
+
+    function renderSenses(data) {
+      const grid = document.getElementById('sense-grid');
+      grid.innerHTML = '';
+      
+      // Pick random emojis from the list
+      const pool = [...data.e].sort(() => Math.random() - 0.5).slice(0, 8);
+      
+      pool.forEach((emoji, i) => {
+        const div = document.createElement('div');
+        div.className = 'sense-item';
+        div.textContent = emoji;
+        div.style.animationDelay = (i * 0.1) + "s"; // Pop in sequence
+        div.onclick = () => tapSense(div, data.c);
+        grid.appendChild(div);
+      });
+    }
+
+    function tapSense(el, target) {
+      if (el.classList.contains('tapped')) return;
+      
+      // Play soft "bubble" plink
+      playSenseTone(880 + (itemsTapped * 100), 'sine', 0.2, 0.04);
+
+      el.classList.add('tapped');
+      itemsTapped++;
+      document.getElementById('sense-tap-text').textContent = `${itemsTapped} / ${target} tapped`;
+
+      if (itemsTapped >= target) {
+        if (senseStep < 5) {
+          document.getElementById('btn-sense-next').style.display = "block";
+          document.getElementById('btn-sense-next').textContent = "Next Sense ➔";
+        } else {
+          finishSensoryGame();
+        }
+      }
+    }
+
+    function finishSensoryGame() {
+      playSuccessChime(); // Success Arpeggio
+      const grid = document.getElementById('sense-grid');
+      grid.innerHTML = `<div style="grid-column: 1 / -1; padding:20px;">
+        <div class="icon-circle" style="margin:0 auto 15px; background:var(--sage-pale); color:var(--sage-deep);">💚</div>
+        <h4 style="color:var(--primary-deep); font-size:18px;">You're back. 💚</h4>
+        <p style="font-size:14px; color:var(--text-soft);">You took a great step for your well-being today. I'm proud of you.</p>
+      </div>`;
+      document.getElementById('btn-sense-next').style.display = "block";
+      document.getElementById('btn-sense-next').textContent = "Finish Exercise ✨";
+      logActivity('sensory_grounding_complete', 1);
     }
 
     // ════════════════════════════════════════════════
