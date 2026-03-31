@@ -1821,6 +1821,59 @@ if (!is_logged_in()) {
       transform: translateY(-1px);
     }
 
+    /* Weekly Report Modal Summary */
+    .report-card {
+      background: linear-gradient(135deg, var(--white) 0%, var(--sage-pale) 100%);
+      border: 1.5px solid var(--sage);
+      border-radius: 20px;
+      padding: 0;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(124, 152, 133, 0.1);
+      overflow: hidden;
+    }
+
+    .report-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 12px;
+      padding: 24px;
+      border-top: 1px solid var(--warm-mid);
+    }
+
+    .report-stat-item {
+      text-align: center;
+      padding: 12px;
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .report-stat-val {
+      display: block;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--sage-deep);
+    }
+
+    .report-stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .report-summary-text {
+      padding: 0 24px 24px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    .report-summary-text p {
+      margin-top: 10px;
+    }
+
     /* ═══════════════════════════════════════════════
     RESPONSIVE
     ═══════════════════════════════════════════════ */
@@ -1993,8 +2046,13 @@ if (!is_logged_in()) {
 
     <!-- ── Journal ────────────────────────────────────── -->
     <div class="tab-panel" id="panel-journal">
-      <h2 class="section-title">Your Mood Journal</h2>
-      <p class="section-sub">Track how you're feeling — your entries are private and safe here.</p>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+        <div>
+          <h2 class="section-title">Your Mood Journal</h2>
+          <p class="section-sub">Track how you're feeling — your entries are private and safe here.</p>
+        </div>
+        <button class="btn-primary" style="padding:10px 18px; border-radius:12px; font-size:13px; width:auto;" onclick="openWeeklyReport()">📊 Weekly Summary</button>
+      </div>
 
       <!-- AI Insights Card -->
       <div class="insights-card" id="insights-card">
@@ -2333,6 +2391,28 @@ if (!is_logged_in()) {
     </div>
 
   </div><!-- /#app -->
+
+  <!-- ── Weekly Well-being Report Modal ────────────────── -->
+  <div class="modal-overlay" id="report-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-family:'Lora',serif; color:var(--sage-deep)">Your Weekly Well-being Report</h3>
+        <button class="btn-close-modal" onclick="document.getElementById('report-modal').classList.remove('open')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="section-sub" style="margin-bottom:20px">A look back at your journey of self-care and support over the last 7 days.</p>
+        
+        <div id="report-container">
+          <div style="text-align:center; padding:40px;">
+            <div class="typing-indicator" style="display:flex; justify-content:center; margin-bottom:10px;">
+              <span></span><span></span><span></span>
+            </div>
+            <p style="color:var(--text-soft)">Asking Mehjabeen to prepare your report...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ── Post Detail Modal ─────────────────────────── -->
   <div class="modal-overlay" id="post-modal">
@@ -3409,9 +3489,69 @@ if (!is_logged_in()) {
       breathingCount++;
       counter.textContent = breathingCount;
       showToast('Cycle ' + breathingCount + ' complete 🌿');
+      logActivity('breathing_cycle_complete', 1);
 
       // Loop
       runBreathingCycle();
+    }
+
+    async function logActivity(type, value = 1) {
+      const fd = new FormData();
+      fd.append('action', 'log_activity');
+      fd.append('type', type);
+      fd.append('value', value);
+      await fetch('report.php', { method: 'POST', body: fd }).catch(() => {});
+    }
+
+    async function openWeeklyReport() {
+      const modal = document.getElementById('report-modal');
+      const container = document.getElementById('report-container');
+      modal.classList.add('open');
+      
+      // Loading state
+      container.innerHTML = `
+        <div style="text-align:center; padding:40px;">
+          <div class="typing-indicator" style="display:flex; justify-content:center; margin-bottom:10px;">
+            <span></span><span></span><span></span>
+          </div>
+          <p style="color:var(--text-soft)">Asking Mehjabeen to prepare your report...</p>
+        </div>`;
+
+      const res = await fetch('report.php?action=get_report').then(r => r.json());
+      if (!res.success) {
+        container.innerHTML = `<div class="empty-state">Unable to load your report. Please try again later.</div>`;
+        return;
+      }
+
+      const s = res.stats;
+      container.innerHTML = `
+        <div class="report-card">
+          <div class="report-stat-grid">
+            <div class="report-stat-item">
+              <span class="report-stat-val">📈 ${s.avg_mood || 0}</span>
+              <span class="report-stat-label">Avg Mood</span>
+            </div>
+            <div class="report-stat-item">
+              <span class="report-stat-val">📓 ${s.journal_count}</span>
+              <span class="report-stat-label">Entries</span>
+            </div>
+            <div class="report-stat-item">
+              <span class="report-stat-val">🌬️ ${s.breathing}</span>
+              <span class="report-stat-label">Breathes</span>
+            </div>
+            <div class="report-stat-item">
+              <span class="report-stat-val">💚 ${s.hearts}</span>
+              <span class="report-stat-label">Hearts</span>
+            </div>
+          </div>
+          <div class="report-summary-text">
+            <h4 style="font-family:'Lora',serif; color:var(--sage-deep); margin-bottom:5px;">Mehjabeen's Summary</h4>
+            <div style="white-space: pre-wrap;">${escHtml(res.summary).replace(/\n/g, '<br>')}</div>
+          </div>
+        </div>
+        <div style="text-align:center; margin-top:10px">
+          <p style="font-size:12px; color:var(--text-soft)">You're doing great. Keep taking care of yourself, one day at a time. 💚</p>
+        </div>`;
     }
 
     async function countdown(seconds, element) {
