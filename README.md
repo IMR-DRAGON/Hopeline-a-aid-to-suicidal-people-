@@ -15,6 +15,9 @@ HopeLine is a suicide prevention and mental health support platform designed to 
 | 📓 **Mood Tracker & Journal** | Private daily mood logging with trend charts to help users monitor and understand their emotional well-being. |
 | 📞 **Emergency Hub** | Quick access to verified international and local (Bangladesh) crisis helplines, always one tap away. |
 | 🌬️ **Pause & Breathe (Grounding Tool)** | An interactive 4-7-8 breathing exercise with a live animated circle, countdown timer, step indicators, and a cycle counter — designed for immediate anxiety relief. |
+| 🧩 **5-4-3-2-1 Sensory Grounding** | An interactive, game-like exercise designed to ground users in a crisis. Features floating nature icons with synthesized audio feedback (Web Audio API) to engage multiple senses. |
+| 📈 **Emotional Insights (AI-Powered)** | Mehjabeen uses the LongCat AI to analyze recent mood history and provide empathetic reflections on emotional patterns and progress. |
+| 📋 **Weekly Well-being Reports** | Automatically generated reports that track user activity (breathing sessions, forum participation, hearts) and provide an AI-summarized overview of their week. |
 | 🏅 **Support Badges** | A community recognition system that awards badges to helpful forum members based on hearts received. Includes a live leaderboard and personal progress tracker. |
 
 ### 🏅 Badge Tiers
@@ -50,11 +53,13 @@ hopeline/
 ├── auth.php            ← Login / Register / Logout API
 ├── chat.php            ← AI chat backend (LongCat API)
 ├── forum.php           ← Community forum + badges/leaderboard API
-├── journal.php         ← Mood journal backend
+├── journal.php         ← Mood journal + AI insights API
+├── report.php          ← Weekly reports + activity logging API
 ├── peer_chat.php       ← Anonymous peer support backend
 ├── safety_plan.php     ← Safety Plan backend
 ├── session_check.php   ← Session status check
-├── database.sql        ← Run this to set up your database
+├── update_db.php       ← Run this to update your database for new features
+├── database.sql        ← Base database schema
 └── uploads/            ← User-uploaded images (gitignored)
 ```
 
