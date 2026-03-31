@@ -25,6 +25,9 @@ if ($action === 'list') {
         if ($post['is_anonymous']) {
             $post['display_name'] = 'Anonymous';
             $post['avatar_color'] = '#aaaaaa';
+            $post['badge'] = null;
+        } else {
+            $post['badge'] = get_user_badge((int)$post['user_id'], $pdo);
         }
     }
 
@@ -85,6 +88,9 @@ if ($action === 'get_post') {
     if ($post['is_anonymous']) {
         $post['display_name'] = 'Anonymous';
         $post['avatar_color'] = '#aaaaaa';
+        $post['badge'] = null;
+    } else {
+        $post['badge'] = get_user_badge((int)$post['user_id'], $pdo);
     }
 
     // Check if current user has hearted this post
@@ -106,6 +112,9 @@ if ($action === 'get_post') {
         if ($reply['is_anonymous']) {
             $reply['display_name'] = 'Anonymous';
             $reply['avatar_color'] = '#aaaaaa';
+            $reply['badge'] = null;
+        } else {
+            $reply['badge'] = get_user_badge((int)$reply['user_id'], $pdo);
         }
         $stmt2 = $pdo->prepare("SELECT id FROM forum_reactions WHERE reply_id = ? AND user_id = ?");
         $stmt2->execute([$reply['id'], $_SESSION['user_id']]);
@@ -293,6 +302,36 @@ if ($action === 'delete_reply') {
 
     $pdo->prepare("DELETE FROM forum_replies WHERE id = ?")->execute([$reply_id]);
     echo json_encode(['success' => true, 'message' => 'Reply deleted.']);
+    exit;
+}
+
+// ── Leaderboard ───────────────────────────────────────────────────────────────
+if ($action === 'leaderboard') {
+    $stmt = $pdo->query("
+        SELECT
+            u.id,
+            u.display_name,
+            u.avatar_color,
+            (
+                (SELECT COUNT(*) FROM forum_reactions WHERE post_id  IN (SELECT id FROM forum_posts    WHERE user_id = u.id)) +
+                (SELECT COUNT(*) FROM forum_reactions WHERE reply_id IN (SELECT id FROM forum_replies  WHERE user_id = u.id))
+            ) AS total_hearts,
+            (SELECT COUNT(*) FROM forum_posts    WHERE user_id = u.id) AS post_count,
+            (SELECT COUNT(*) FROM forum_replies  WHERE user_id = u.id) AS reply_count
+        FROM users u
+        ORDER BY total_hearts DESC, post_count DESC
+        LIMIT 10
+    ");
+    $leaders = $stmt->fetchAll();
+
+    foreach ($leaders as &$leader) {
+        $leader['badge'] = get_user_badge((int)$leader['id'], $pdo);
+    }
+
+    // Also include current user's badge
+    $my_badge = get_user_badge((int)$_SESSION['user_id'], $pdo);
+
+    echo json_encode(['success' => true, 'leaders' => $leaders, 'my_badge' => $my_badge]);
     exit;
 }
 

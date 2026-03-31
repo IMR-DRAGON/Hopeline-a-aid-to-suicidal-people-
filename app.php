@@ -1617,6 +1617,147 @@ if (!is_logged_in()) {
     }
     
     /* ═══════════════════════════════════════════════
+    BADGES
+    ═══════════════════════════════════════════════ */
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 10px 2px 6px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    /* Leaderboard */
+    .leaderboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    .leader-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 24px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border: 1.5px solid var(--warm-mid);
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .leader-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--sage);
+      box-shadow: 0 8px 24px rgba(124,152,133,0.15);
+    }
+
+    .leader-rank {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-pale);
+      width: 30px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .leader-rank.gold   { color: #f4ad13; }
+    .leader-rank.silver { color: #b0b0b0; }
+    .leader-rank.bronze { color: #cd7f32; }
+
+    .leader-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .leader-info { flex: 1; min-width: 0; }
+
+    .leader-name {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .leader-stats {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .leader-stat {
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .my-badge-banner {
+      background: var(--white);
+      border: 1.5px solid var(--sage);
+      border-radius: 20px;
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+      box-shadow: 0 4px 20px rgba(124,152,133,0.12);
+    }
+
+    .my-badge-icon { font-size: 40px; }
+
+    .my-badge-info h3 {
+      font-family: 'Lora', serif;
+      font-size: 20px;
+      color: var(--sage-deep);
+    }
+
+    .my-badge-info p {
+      font-size: 13px;
+      color: var(--text-soft);
+      margin-top: 2px;
+    }
+
+    .progress-bar-wrap {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .progress-bar-bg {
+      background: var(--warm-mid);
+      border-radius: 20px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 20px;
+      background: var(--sage);
+      transition: width 0.8s ease;
+    }
+
+    .progress-label {
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-top: 5px;
+    }
+
+    /* ═══════════════════════════════════════════════
     RESPONSIVE
     ═══════════════════════════════════════════════ */
     @media (max-width: 600px) {
@@ -1732,6 +1873,7 @@ if (!is_logged_in()) {
             Plan</span></button>
         <button class="nav-tab" onclick="showTab('peer')" id="tab-peer">👥 <span class="label">Peer Chat</span></button>
         <button class="nav-tab" onclick="showTab('grounding')" id="tab-grounding">🌬️ <span class="label">Grounding</span></button>
+        <button class="nav-tab" onclick="showTab('leaderboard')" id="tab-leaderboard">🏅 <span class="label">Badges</span></button>
       </div>
       <div class="topnav-user">
         <button onclick="toggleDarkMode()" id="btn-dark-mode"
@@ -2095,6 +2237,27 @@ if (!is_logged_in()) {
       </div>
     </div>
 
+    <!-- ── Badges / Leaderboard ─────────────────────────────── -->
+    <div class="tab-panel" id="panel-leaderboard">
+      <h1 class="section-title">🏅 Community Supporters</h1>
+      <p class="section-sub">Heart-powered badges for our most supportive members. Every 💚 counts!</p>
+
+      <!-- Current user's own badge -->
+      <div id="my-badge-section"></div>
+
+      <!-- Badge tiers legend -->
+      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:32px;">
+        <span class="badge-pill" style="background:#f4ad1322; color:#c98b00;">🌟 Bright Star — 50+ hearts</span>
+        <span class="badge-pill" style="background:#3498db22; color:#1a6fa8;">🏆 Active Listener — 20+ hearts</span>
+        <span class="badge-pill" style="background:#27ae6022; color:#1a7a44;">💚 Kind Soul — 5+ hearts</span>
+        <span class="badge-pill" style="background:#7c988522; color:#4d6b55;">🌱 Fresh Voice — 1+ heart</span>
+      </div>
+
+      <h2 style="font-family:'Lora',serif; font-size:18px; color:var(--sage-deep); margin-bottom:4px;">Top Supporters</h2>
+      <p class="section-sub" style="margin-bottom:0;">Updated live as the community spreads kindness.</p>
+      <div class="leaderboard-grid" id="leaderboard-list"></div>
+    </div>
+
   </div><!-- /#app -->
 
   <!-- ── Post Detail Modal ─────────────────────────── -->
@@ -2311,9 +2474,8 @@ if (!is_logged_in()) {
       document.getElementById('panel-' + tab).classList.add('active');
       document.getElementById('tab-' + tab).classList.add('active');
       
-      if (tab === 'peer') {
-        showPeerList('active');
-      }
+      if (tab === 'peer') showPeerList('active');
+      if (tab === 'leaderboard') loadLeaderboard();
     }
 
     // ════════════════════════════════════════════════
@@ -2537,7 +2699,11 @@ if (!is_logged_in()) {
         <div class="post-author">
           <div class="post-avatar" style="background:${p.avatar_color}">${p.display_name.charAt(0)}</div>
           <div>
-            <div class="post-author-name">${escHtml(p.display_name)} ${p.pinned ? '📌' : ''}</div>
+            <div class="post-author-name">
+              ${escHtml(p.display_name)}
+              ${p.badge ? `<span class="badge-pill" style="background:${p.badge.color}22; color:${p.badge.color};">${p.badge.icon} ${p.badge.name}</span>` : ''}
+              ${p.pinned ? '📌' : ''}
+            </div>
             <div class="post-author-date">${formatDate(p.created_at)}</div>
           </div>
         </div>
@@ -2591,7 +2757,10 @@ if (!is_logged_in()) {
       <div class="post-author">
         <div class="post-avatar" style="background:${p.avatar_color}">${p.display_name.charAt(0)}</div>
         <div>
-          <div class="post-author-name">${escHtml(p.display_name)}</div>
+          <div class="post-author-name">
+            ${escHtml(p.display_name)}
+            ${p.badge ? `<span class="badge-pill" style="background:${p.badge.color}22; color:${p.badge.color};">${p.badge.icon} ${p.badge.name}</span>` : ''}
+          </div>
           <div class="post-author-date">${formatDate(p.created_at)}</div>
         </div>
       </div>
@@ -2611,7 +2780,10 @@ if (!is_logged_in()) {
             <div class="post-author" style="margin:0">
               <div class="post-avatar" style="background:${r.avatar_color};width:24px;height:24px;font-size:10px">${r.display_name.charAt(0)}</div>
               <div>
-                <div class="post-author-name" style="font-size:12px">${escHtml(r.display_name)}</div>
+                <div class="post-author-name" style="font-size:12px">
+                  ${escHtml(r.display_name)}
+                  ${r.badge ? `<span class="badge-pill" style="background:${r.badge.color}22; color:${r.badge.color}; font-size:9px;">${r.badge.icon} ${r.badge.name}</span>` : ''}
+                </div>
                 <div class="post-author-date">${formatDate(r.created_at)}</div>
               </div>
             </div>
@@ -3163,6 +3335,78 @@ if (!is_logged_in()) {
 
     // ════════════════════════════════════════════════
     // UTILS
+    // ════════════════════════════════════════════════
+    // ════════════════════════════════════════════════
+    // LEADERBOARD & BADGES
+    // ════════════════════════════════════════════════
+    async function loadLeaderboard() {
+      const res = await fetch('forum.php?action=leaderboard').then(r => r.json());
+      if (!res.success) return;
+
+      // ── My Badge Banner ──
+      const mySection = document.getElementById('my-badge-section');
+      if (res.my_badge) {
+        const b = res.my_badge;
+        const pct  = b.next_at ? Math.min(100, Math.round((b.hearts / b.next_at) * 100)) : 100;
+        const nextTip = b.next_at
+          ? `${b.hearts}/${b.next_at} hearts — ${b.next_at - b.hearts} more to earn <strong>${b.next}</strong>`
+          : `You've reached the highest badge! 🌟`;
+        mySection.innerHTML = `
+          <div class="my-badge-banner">
+            <div class="my-badge-icon">${b.icon}</div>
+            <div class="my-badge-info">
+              <h3>${b.name}</h3>
+              <p>You've earned ${b.hearts} 💚 from the community</p>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width:${pct}%; background:${b.color};"></div>
+              </div>
+              <div class="progress-label">${nextTip}</div>
+            </div>
+          </div>`;
+      } else {
+        mySection.innerHTML = `
+          <div class="my-badge-banner" style="border-color:var(--warm-mid)">
+            <div class="my-badge-icon">🌟</div>
+            <div class="my-badge-info">
+              <h3>No badge yet</h3>
+              <p>Write helpful posts & replies. When someone hearts you, your journey begins! 💚</p>
+            </div>
+          </div>`;
+      }
+
+      // ── Leaderboard Grid ──
+      const rankMedals = ['🥇','🥈','🥉'];
+      const rankClass  = ['gold','silver','bronze'];
+      const list = document.getElementById('leaderboard-list');
+
+      if (!res.leaders.length) {
+        list.innerHTML = `<div class="empty-state"><div class="icon">💚</div><p>Be the first to earn a badge by supporting others!</p></div>`;
+        return;
+      }
+
+      list.innerHTML = res.leaders.map((l, i) => {
+        const rank    = i < 3 ? rankMedals[i] : `#${i + 1}`;
+        const rankCls = i < 3 ? rankClass[i]  : '';
+        const badge   = l.badge;
+        return `
+        <div class="leader-card">
+          <div class="leader-rank ${rankCls}">${rank}</div>
+          <div class="leader-avatar" style="background:${l.avatar_color}">${l.display_name.charAt(0).toUpperCase()}</div>
+          <div class="leader-info">
+            <div class="leader-name">${escHtml(l.display_name)}</div>
+            ${badge ? `<span class="badge-pill" style="background:${badge.color}22; color:${badge.color}; margin:4px 0; display:inline-flex;">${badge.icon} ${badge.name}</span>` : ''}
+            <div class="leader-stats">
+              <span class="leader-stat">💚 ${l.total_hearts}</span>
+              <span class="leader-stat">📝 ${l.post_count} posts</span>
+              <span class="leader-stat">💬 ${l.reply_count} replies</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
     // ════════════════════════════════════════════════
     async function postForm(url, formData) {
       try {
