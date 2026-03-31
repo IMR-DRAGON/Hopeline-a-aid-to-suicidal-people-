@@ -1877,6 +1877,77 @@ if (!is_logged_in()) {
       50% { transform: translateY(-10px); }
     }
 
+    /* Leaves in a Stream */
+    .stream-container {
+      position: relative;
+      width: 100%;
+      height: 450px; /* Bigger screen */
+      background: linear-gradient(to bottom, #74ebd522, #acb6e522);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-top: 20px;
+      border: 1px solid var(--sage-pale);
+    }
+    .stream-bg {
+      position: absolute;
+      top: 0; left: 0; width: 200%; height: 100%;
+      background: repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(124, 152, 133, 0.05) 50px, rgba(124, 152, 133, 0.05) 100px);
+      animation: streamFlow 10s linear infinite;
+    }
+    @keyframes streamFlow {
+      from { transform: translateX(0); }
+      to { transform: translateX(-500px); }
+    }
+    .leaf {
+      position: absolute;
+      padding: 15px 25px;
+      background: #e67e22;
+      color: white;
+      border-radius: 50% 0 50% 0;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      z-index: 10;
+      right: -250px;
+      animation: leafFloat 10s linear forwards;
+    }
+      right: -250px;
+      animation: leafFloat 10s linear forwards;
+    }
+    @keyframes leafFloat {
+      0% { transform: translateX(0) scale(1.1) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateX(-1500px) scale(0.4) rotate(45deg); opacity: 0; }
+    }
+
+    /* Zen Sand Garden */
+    #zen-canvas {
+      width: 100%;
+      height: 450px;
+      background-color: #e0e0e0;
+      background-image: radial-gradient(#d0d0d0 1px, transparent 1px);
+      background-size: 4px 4px;
+      border-radius: 20px;
+      cursor: crosshair;
+      touch-action: none;
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.05);
+    }
+    .color-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .color-dot.active {
+      transform: scale(1.3);
+      border-color: var(--white);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
     .btn-insights {
       padding: 8px 16px;
       background: var(--sage-deep);
@@ -2441,12 +2512,31 @@ if (!is_logged_in()) {
           </div>
         </div>
 
-        <!-- 5-4-3-2-1 Sensory Card -->
-        <div class="breathing-card" style="margin-top:30px; display:flex; flex-direction:column; align-items:center; text-align:center; padding:40px;">
-          <div class="icon-circle" style="width:64px; height:64px; font-size:32px; background:var(--sage-pale); color:var(--sage-deep); margin-bottom:20px;">🧩</div>
-          <h2 style="font-family:'Lora',serif; color:var(--sage-deep); margin-bottom:8px;">5-4-3-2-1 Grounding</h2>
-          <p class="section-sub" style="max-width:500px; margin-bottom:24px;">Ground yourself in the present by interacting with calming images. A quick, engaging way to quiet a busy mind.</p>
-          <button class="btn-primary" style="padding:14px 32px; border-radius:14px; width:auto;" onclick="startSensoryGame()">Start Sensory Grounding ✨</button>
+        <!-- Grounding Grid -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:24px; margin-top:32px;">
+          <!-- 5-4-3-2-1 Sensory Card -->
+          <div class="breathing-card" style="display:flex; flex-direction:column; align-items:center; text-align:center; padding:32px;">
+            <div class="icon-circle" style="width:56px; height:56px; font-size:28px; background:var(--sage-pale); color:var(--sage-deep); margin-bottom:16px;">🧩</div>
+            <h2 style="font-family:'Lora',serif; color:var(--sage-deep); margin-bottom:8px; font-size:18px;">5-4-3-2-1 Grounding</h2>
+            <p class="section-sub" style="margin-bottom:20px; font-size:14px;">Interact with calming images to stay present. Engaging and quick.</p>
+            <button class="btn-primary" style="padding:10px 24px; border-radius:12px; width:auto; font-size:14px" onclick="startSensoryGame()">Start Sensory ✨</button>
+          </div>
+
+          <!-- Leaves in a Stream Card -->
+          <div class="breathing-card" style="display:flex; flex-direction:column; align-items:center; text-align:center; padding:32px;">
+            <div class="icon-circle" style="width:56px; height:56px; font-size:28px; background:var(--sage-pale); color:var(--sage-deep); margin-bottom:16px;">🍂</div>
+            <h2 style="font-family:'Lora',serif; color:var(--sage-deep); margin-bottom:8px; font-size:18px;">Leaves in a Stream</h2>
+            <p class="section-sub" style="margin-bottom:20px; font-size:14px;">Place your difficult thoughts on leaves and watch them float away.</p>
+            <button class="btn-primary" style="padding:10px 24px; border-radius:12px; width:auto; font-size:14px" onclick="openLeavesModal()">Let Go 🌿</button>
+          </div>
+
+          <!-- Zen Sand Garden Card -->
+          <div class="breathing-card" style="display:flex; flex-direction:column; align-items:center; text-align:center; padding:32px;">
+            <div class="icon-circle" style="width:56px; height:56px; font-size:28px; background:var(--sage-pale); color:var(--sage-deep); margin-bottom:16px;">🏜️</div>
+            <h2 style="font-family:'Lora',serif; color:var(--sage-deep); margin-bottom:8px; font-size:18px;">Zen Sand Garden</h2>
+            <p class="section-sub" style="margin-bottom:20px; font-size:14px;">Create calming patterns in soft sand. Tactile mindfulness.</p>
+            <button class="btn-primary" style="padding:10px 24px; border-radius:12px; width:auto; font-size:14px" onclick="openZenModal()">Rake Sand 🪴</button>
+          </div>
         </div>
       </div>
     </div>
@@ -2504,6 +2594,55 @@ if (!is_logged_in()) {
 
           <button class="btn-primary" id="btn-sense-next" style="width:auto; padding:12px 24px; border-radius:12px;" onclick="nextSenseStep()">Let's Start</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Leaves in a Stream Modal ──────────────────── -->
+  <div class="modal-overlay" id="leaves-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-family:'Lora',serif; color:var(--sage-deep)">Leaves in a Stream</h3>
+        <button class="btn-close-modal" onclick="closeLeavesModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="section-sub" style="margin-bottom:15px">Imagine each leaf represents a thought. Place a difficult thought on a leaf and watch it float away. Let it pass without judgment. 🍂</p>
+        
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+          <input type="text" id="leaf-input" class="forum-title-input" placeholder="Type a thought that's bothering you..." style="margin:0; flex:1" onkeydown="if(event.key==='Enter') releaseLeaf()">
+          <button class="btn-primary" style="width:auto; height:45px; border-radius:10px; padding:0 25px;" onclick="releaseLeaf()">Let it Go ➔</button>
+        </div>
+
+        <div class="stream-container" id="stream-container">
+          <div class="stream-bg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Zen Sand Garden Modal ───────────────────── -->
+  <div class="modal-overlay" id="zen-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-family:'Lora',serif; color:var(--sage-deep)">Zen Sand Garden</h3>
+        <button class="btn-close-modal" onclick="closeZenModal()">✕</button>
+      </div>
+      <div class="modal-body" style="text-align:center">
+        <p class="section-sub" style="margin-bottom:15px">Use your mouse or finger to rake the sand. Focus on the patterns you create. There is no right or wrong way. 🪴</p>
+        
+        <div style="position:relative; margin-bottom:15px;">
+           <canvas id="zen-canvas" width="800" height="450"></canvas>
+        </div>
+
+        <div style="display:flex; justify-content:center; gap:12px; margin-bottom:15px;">
+          <div class="color-dot active" style="background:#b4b4b4" onclick="setSandColor('#b4b4b4', this)"></div>
+          <div class="color-dot" style="background:#e67e22" onclick="setSandColor('#e67e22', this)"></div>
+          <div class="color-dot" style="background:#3498db" onclick="setSandColor('#3498db', this)"></div>
+          <div class="color-dot" style="background:#2ecc71" onclick="setSandColor('#2ecc71', this)"></div>
+          <div class="color-dot" style="background:#9b59b6" onclick="setSandColor('#9b59b6', this)"></div>
+        </div>
+
+        <button class="nav-tab" onclick="clearSand()" style="border:1px solid var(--sage); color:var(--sage-deep); font-size:12px;">Reset Garden 🔄</button>
       </div>
     </div>
   </div>
@@ -3716,6 +3855,188 @@ if (!is_logged_in()) {
       [440, 554, 659, 880].forEach((f, i) => {
         setTimeout(() => playSenseTone(f, 'sine', 0.8, 0.05), i * 120);
       });
+    }
+
+    // ──────────────────────────────────────────────
+    // CONTINUOUS AMBIENT SOUND (Waves/Air)
+    // ──────────────────────────────────────────────
+    let ambientSource = null;
+    let ambientGain = null;
+
+    function startAmbientSound() {
+      if (ambientSource) return;
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      const bufferSize = 2 * audioCtx.sampleRate;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1; // White noise
+      }
+
+      ambientSource = audioCtx.createBufferSource();
+      ambientSource.buffer = noiseBuffer;
+      ambientSource.loop = true;
+
+      ambientGain = audioCtx.createGain();
+      ambientGain.gain.setValueAtTime(0, audioCtx.currentTime);
+
+      // Low pass filter for "softer" air sound
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(800, audioCtx.currentTime);
+
+      ambientSource.connect(filter);
+      filter.connect(ambientGain);
+      ambientGain.connect(audioCtx.destination);
+
+      ambientSource.start();
+      
+      // Smooth fade in
+      ambientGain.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 2);
+      
+      // Wave Oscillation (Pseudo-LFO)
+      animateWaves();
+    }
+
+    function animateWaves() {
+      if (!ambientGain) return;
+      const now = audioCtx.currentTime;
+      // Cycle volume up and down every 6 seconds
+      const val = 0.02 + Math.abs(Math.sin(now * 0.5)) * 0.03;
+      ambientGain.gain.setTargetAtTime(val, now, 1);
+      requestAnimationFrame(animateWaves);
+    }
+
+    function stopAmbientSound() {
+      if (!ambientGain) return;
+      ambientGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.5);
+      setTimeout(() => {
+        if (ambientSource) {
+          ambientSource.stop();
+          ambientSource = null;
+          ambientGain = null;
+        }
+      }, 1600);
+    }
+
+    // ──────────────────────────────────────────────
+    // LEAVES IN A STREAM
+    // ──────────────────────────────────────────────
+    function openLeavesModal() {
+      document.getElementById('leaves-modal').classList.add('open');
+      startAmbientSound();
+    }
+
+    function closeLeavesModal() {
+      document.getElementById('leaves-modal').classList.remove('open');
+      stopAmbientSound();
+    }
+
+    function releaseLeaf() {
+      const input = document.getElementById('leaf-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const container = document.getElementById('stream-container');
+      const leaf = document.createElement('div');
+      leaf.className = 'leaf';
+      leaf.textContent = text;
+      
+      const top = Math.random() * 300 + 50; // Random vertical within larger screen
+      leaf.style.top = top + 'px';
+      
+      container.appendChild(leaf);
+      input.value = '';
+
+      playSenseTone(200, 'triangle', 0.5, 0.02);
+      logActivity('leaves_stream_thought', 1);
+      setTimeout(() => leaf.remove(), 10000);
+    }
+
+    // ──────────────────────────────────────────────
+    // ZEN SAND GARDEN
+    // ──────────────────────────────────────────────
+    let isDrawingSand = false;
+    let lastSandX = 0;
+    let lastSandY = 0;
+    let currentSandColor = '#b4b4b4'; 
+
+    function openZenModal() {
+      document.getElementById('zen-modal').classList.add('open');
+      initZenCanvas();
+    }
+
+    function closeZenModal() {
+      document.getElementById('zen-modal').classList.remove('open');
+    }
+
+    function setSandColor(color, el) {
+      currentSandColor = color;
+      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function initZenCanvas() {
+      const canvas = document.getElementById('zen-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      const startDraw = (ex, ey) => {
+        isDrawingSand = true;
+        const rect = canvas.getBoundingClientRect();
+        lastSandX = (ex - rect.left) * (canvas.width / rect.width);
+        lastSandY = (ey - rect.top) * (canvas.height / rect.height);
+      };
+
+      const moveDraw = (ex, ey) => {
+        if (!isDrawingSand) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = (ex - rect.left) * (canvas.width / rect.width);
+        const y = (ey - rect.top) * (canvas.height / rect.height);
+
+        ctx.beginPath();
+        ctx.moveTo(lastSandX, lastSandY);
+        ctx.lineTo(x, y);
+        
+        ctx.strokeStyle = currentSandColor + '44'; 
+        ctx.lineWidth = 18;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(lastSandX, lastSandY);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = currentSandColor; 
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        
+        lastSandX = x;
+        lastSandY = y;
+
+        if (Math.random() > 0.8) playSenseTone(150 + Math.random() * 50, 'sawtooth', 0.1, 0.01);
+      };
+
+      canvas.onmousedown = (e) => startDraw(e.clientX, e.clientY);
+      canvas.onmousemove = (e) => moveDraw(e.clientX, e.clientY);
+      canvas.onmouseup = canvas.onmouseleave = () => { if(isDrawingSand) logActivity('zen_garden_rake', 1); isDrawingSand = false; };
+
+      canvas.ontouchstart = (e) => {
+        const t = e.touches[0];
+        startDraw(t.clientX, t.clientY);
+      };
+      canvas.ontouchmove = (e) => {
+        const t = e.touches[0];
+        moveDraw(t.clientX, t.clientY);
+        e.preventDefault();
+      };
+      canvas.ontouchend = () => { if(isDrawingSand) logActivity('zen_garden_rake', 1); isDrawingSand = false; };
+    }
+
+    function clearSand() {
+      const canvas = document.getElementById('zen-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      playSenseTone(100, 'sine', 0.5, 0.05);
     }
 
     // ──────────────────────────────────────────────
