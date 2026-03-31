@@ -1757,6 +1757,70 @@ if (!is_logged_in()) {
       margin-top: 5px;
     }
 
+    /* AI Insights */
+    .insights-card {
+      background: linear-gradient(135deg, var(--white) 0%, var(--sage-pale) 100%);
+      border: 1.5px solid var(--sage);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 30px;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      box-shadow: 0 10px 30px rgba(124, 152, 133, 0.1);
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.6s ease;
+    }
+
+    .insights-icon {
+      font-size: 32px;
+      background: var(--white);
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+      flex-shrink: 0;
+    }
+
+    .insights-content {
+      flex: 1;
+    }
+
+    .insights-content h3 {
+      font-family: 'Lora', serif;
+      font-size: 18px;
+      color: var(--sage-deep);
+      margin-bottom: 4px;
+    }
+
+    .insights-content p {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .btn-insights {
+      padding: 8px 16px;
+      background: var(--sage-deep);
+      color: var(--white);
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all 0.2s;
+    }
+
+    .btn-insights:hover {
+      background: var(--sage);
+      transform: translateY(-1px);
+    }
+
     /* ═══════════════════════════════════════════════
     RESPONSIVE
     ═══════════════════════════════════════════════ */
@@ -1931,6 +1995,16 @@ if (!is_logged_in()) {
     <div class="tab-panel" id="panel-journal">
       <h2 class="section-title">Your Mood Journal</h2>
       <p class="section-sub">Track how you're feeling — your entries are private and safe here.</p>
+
+      <!-- AI Insights Card -->
+      <div class="insights-card" id="insights-card">
+        <div class="insights-icon">🌸</div>
+        <div class="insights-content">
+          <h3>Your Weekly Insights</h3>
+          <p id="insights-text">I'll analyze your entries to help you see patterns in your emotions!</p>
+          <button class="btn-insights" id="btn-get-insights" onclick="getAIInsights()">Generate My Insights ✨</button>
+        </div>
+      </div>
 
       <div class="journal-form">
         <p style="font-size:13px; font-weight:500; color:var(--text-soft); margin-bottom:10px">How are you feeling
@@ -2476,6 +2550,10 @@ if (!is_logged_in()) {
       
       if (tab === 'peer') showPeerList('active');
       if (tab === 'leaderboard') loadLeaderboard();
+      if (tab === 'journal') {
+        const text = document.getElementById('insights-text').textContent;
+        if (text.includes('I\'ll analyze your entries')) getAIInsights();
+      }
     }
 
     // ════════════════════════════════════════════════
@@ -2674,6 +2752,26 @@ if (!is_logged_in()) {
       <div class="chart-bar" style="height:${(d.avg_mood / max) * 70}px"></div>
       <div class="chart-label">${d.day.slice(5)}</div>
     </div>`).join('');
+    }
+
+    async function getAIInsights() {
+      const btn = document.getElementById('btn-get-insights');
+      const text = document.getElementById('insights-text');
+      
+      btn.disabled = true;
+      btn.textContent = 'Analyzing patterns...';
+      text.textContent = 'Mehjabeen is looking at your recent moods to find helpful patterns...';
+
+      const res = await fetch('journal.php?action=get_insights').then(r => r.json());
+      
+      btn.disabled = false;
+      btn.textContent = 'Update Insights ✨';
+      
+      if (res.success) {
+        text.textContent = res.insight;
+      } else {
+        text.textContent = "I'm having a little trouble analyzing your journal right now. Please try again soon! 💚";
+      }
     }
 
     async function deleteEntry(id) {
