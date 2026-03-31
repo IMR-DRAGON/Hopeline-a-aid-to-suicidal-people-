@@ -1490,6 +1490,51 @@ if (!is_logged_in()) {
       position: relative;
     }
 
+    /* Rectangular Flashcard Style */
+    .grounding-flashcard {
+      background: var(--white);
+      border-radius: 20px; /* Sharper, modern rectangular look */
+      border: 1.5px solid var(--warm-mid);
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+      min-height: 280px; /* Shorter, rectangular profile */
+      box-shadow: var(--shadow-sm);
+      z-index: 1;
+    }
+    .grounding-flashcard:hover {
+      transform: scale(1.04) translateY(-12px);
+      border-color: var(--sage);
+      box-shadow: 0 25px 50px rgba(124, 152, 133, 0.15);
+      z-index: 10;
+    }
+    .grounding-flashcard .icon-circle {
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .grounding-flashcard:hover .icon-circle {
+      transform: scale(1.2) rotate(8deg);
+      background: var(--sage-light);
+    }
+    .grounding-flashcard::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, var(--sage) 0%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.5s;
+      z-index: -1;
+    }
+    .grounding-flashcard:hover::before {
+      opacity: 0.05;
+    }
+
     .breathing-timer-wrap, .breathing-counter-wrap {
       display: flex;
       flex-direction: column;
@@ -1909,17 +1954,14 @@ if (!is_logged_in()) {
       font-weight: 500;
       white-space: nowrap;
       z-index: 10;
-      right: -250px;
-      animation: leafFloat 10s linear forwards;
-    }
-      right: -250px;
-      animation: leafFloat 10s linear forwards;
+      animation: leafFloat 18s linear forwards;
     }
     @keyframes leafFloat {
-      0% { transform: translateX(0) scale(1.1) rotate(0deg); opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { transform: translateX(-1500px) scale(0.4) rotate(45deg); opacity: 0; }
+      0% { transform: translateX(1000px) scale(1.2) rotate(0deg); opacity: 0; }
+      5% { opacity: 1; }
+      40% { transform: translateX(100px) scale(0.9) rotate(5deg); opacity: 1; }
+      75% { transform: translateX(-800px) scale(0.5) rotate(20deg); opacity: 1; }
+      100% { transform: translateX(-1800px) scale(0.2) rotate(35deg); opacity: 0; }
     }
 
     /* Zen Sand Garden */
@@ -2512,30 +2554,30 @@ if (!is_logged_in()) {
           </div>
         </div>
 
-        <!-- Grounding Grid -->
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:24px; margin-top:32px;">
+        <!-- Grounding Grid Row: Flashcards -->
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; margin-top:32px; width:100%;">
           <!-- 5-4-3-2-1 Sensory Card -->
-          <div class="breathing-card" style="display:flex; flex-direction:column; align-items:center; text-align:center; padding:32px;">
-            <div class="icon-circle" style="width:56px; height:56px; font-size:28px; background:var(--sage-pale); color:var(--sage-deep); margin-bottom:16px;">🧩</div>
-            <h2 style="font-family:'Lora',serif; color:var(--sage-deep); margin-bottom:8px; font-size:18px;">5-4-3-2-1 Grounding</h2>
-            <p class="section-sub" style="margin-bottom:20px; font-size:14px;">Interact with calming images to stay present. Engaging and quick.</p>
-            <button class="btn-primary" style="padding:10px 24px; border-radius:12px; width:auto; font-size:14px" onclick="startSensoryGame()">Start Sensory ✨</button>
+          <div class="grounding-flashcard" onclick="startSensoryGame()">
+            <div class="icon-circle" style="width:64px; height:64px; font-size:32px; background:var(--sage-pale); color:var(--sage-deep); margin-bottom:24px;">🧩</div>
+            <h2 style="font-family:'Lora',serif; color:var(--sage-deep); margin-bottom:12px; font-size:20px;">5-4-3-2-1 Grounding</h2>
+            <p class="section-sub" style="margin-bottom:30px; font-size:14px; line-height:1.6;">Interact with calming images to stay present. Engaging and quick.</p>
+            <button class="btn-primary" style="padding:12px 28px; border-radius:14px; width:auto; font-size:14px">Start Sensory ✨</button>
           </div>
 
           <!-- Leaves in a Stream Card -->
-          <div class="breathing-card" style="display:flex; flex-direction:column; align-items:center; text-align:center; padding:32px;">
-            <div class="icon-circle" style="width:56px; height:56px; font-size:28px; background:var(--sage-pale); color:var(--sage-deep); margin-bottom:16px;">🍂</div>
-            <h2 style="font-family:'Lora',serif; color:var(--sage-deep); margin-bottom:8px; font-size:18px;">Leaves in a Stream</h2>
-            <p class="section-sub" style="margin-bottom:20px; font-size:14px;">Place your difficult thoughts on leaves and watch them float away.</p>
-            <button class="btn-primary" style="padding:10px 24px; border-radius:12px; width:auto; font-size:14px" onclick="openLeavesModal()">Let Go 🌿</button>
+          <div class="grounding-flashcard" onclick="openLeavesModal()">
+            <div class="icon-circle" style="width:64px; height:64px; font-size:32px; background:var(--sage-pale); color:var(--sage-deep); margin-bottom:24px;">🍂</div>
+            <h2 style="font-family:'Lora',serif; color:var(--sage-deep); margin-bottom:12px; font-size:20px;">Leaves in a Stream</h2>
+            <p class="section-sub" style="margin-bottom:30px; font-size:14px; line-height:1.6;">Place your difficult thoughts on leaves and watch them float away.</p>
+            <button class="btn-primary" style="padding:12px 28px; border-radius:14px; width:auto; font-size:14px">Let Go 🌿</button>
           </div>
 
           <!-- Zen Sand Garden Card -->
-          <div class="breathing-card" style="display:flex; flex-direction:column; align-items:center; text-align:center; padding:32px;">
-            <div class="icon-circle" style="width:56px; height:56px; font-size:28px; background:var(--sage-pale); color:var(--sage-deep); margin-bottom:16px;">🏜️</div>
-            <h2 style="font-family:'Lora',serif; color:var(--sage-deep); margin-bottom:8px; font-size:18px;">Zen Sand Garden</h2>
-            <p class="section-sub" style="margin-bottom:20px; font-size:14px;">Create calming patterns in soft sand. Tactile mindfulness.</p>
-            <button class="btn-primary" style="padding:10px 24px; border-radius:12px; width:auto; font-size:14px" onclick="openZenModal()">Rake Sand 🪴</button>
+          <div class="grounding-flashcard" onclick="openZenModal()">
+            <div class="icon-circle" style="width:64px; height:64px; font-size:32px; background:var(--sage-pale); color:var(--sage-deep); margin-bottom:24px;">🏜️</div>
+            <h2 style="font-family:'Lora',serif; color:var(--sage-deep); margin-bottom:12px; font-size:20px;">Zen Sand Garden</h2>
+            <p class="section-sub" style="margin-bottom:30px; font-size:14px; line-height:1.6;">Create calming patterns in soft sand. Tactile mindfulness.</p>
+            <button class="btn-primary" style="padding:12px 28px; border-radius:14px; width:auto; font-size:14px">Rake Sand 🪴</button>
           </div>
         </div>
       </div>
