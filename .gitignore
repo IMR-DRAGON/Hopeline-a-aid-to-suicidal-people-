@@ -3,3 +3,4 @@ uploads/
 node_modules/
 .DS_Store
 *.log
+test_models.php

@@ -480,23 +480,54 @@ if (!is_logged_in()) {
     }
 
     .history-item {
-      padding: 10px;
+      padding: 8px 10px;
       margin-bottom: 5px;
       border-radius: 8px;
       background: var(--cream);
       font-size: 13px;
       color: var(--text-soft);
       cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .history-item-text {
+      flex: 1;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      transition: all 0.2s;
+      min-width: 0;
     }
 
     .history-item:hover,
     .history-item.active {
       background: var(--sage-pale);
       color: var(--sage-deep);
+    }
+
+    .btn-delete-chat {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-pale);
+      padding: 2px 4px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 0.15s, color 0.15s;
+      line-height: 1;
+    }
+
+    .history-item:hover .btn-delete-chat {
+      opacity: 1;
+    }
+
+    .btn-delete-chat:hover {
+      color: var(--danger) !important;
+      background: var(--danger-bg);
     }
 
     .chat-container {
@@ -2964,8 +2995,23 @@ if (!is_logged_in()) {
       res.history.forEach(session => {
         const item = document.createElement('div');
         item.className = 'history-item' + (session.id == chatSessionId ? ' active' : '');
-        item.textContent = session.first_msg || 'Empty Chat';
         item.title = session.first_msg || 'Empty Chat';
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'history-item-text';
+        textSpan.textContent = session.first_msg || 'Empty Chat';
+        item.appendChild(textSpan);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn-delete-chat';
+        delBtn.textContent = '🗑';
+        delBtn.title = 'Delete this chat';
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          deleteChatSession(session.id);
+        };
+        item.appendChild(delBtn);
+
         item.onclick = () => {
           if (session.id != chatSessionId) {
             loadChat(session.id);
@@ -2983,6 +3029,25 @@ if (!is_logged_in()) {
       renderChatHistory([]);
       loadChatHistorySidebar();
       showToast('New conversation started 🌸');
+    }
+
+    async function deleteChatSession(sessionId) {
+      if (!confirm('Delete this chat session? This cannot be undone.')) return;
+      const fd = new FormData();
+      fd.append('action', 'delete_session');
+      fd.append('session_id', sessionId);
+      const res = await postForm('chat.php', fd);
+      if (res.success) {
+        showToast('Chat deleted 🗑');
+        // If deleted session was the active one, start fresh
+        if (sessionId == chatSessionId) {
+          await newChatSession();
+        } else {
+          loadChatHistorySidebar();
+        }
+      } else {
+        showToast(res.message || 'Could not delete chat.', true);
+      }
     }
 
     function renderChatHistory(messages) {

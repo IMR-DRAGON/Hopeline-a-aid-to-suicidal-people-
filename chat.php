@@ -7,8 +7,8 @@ header('Content-Type: application/json');
 
 $action = $_POST['action'] ?? '';
 
-// Auto cleanup old chat sessions (> 30 days)
-$pdo->prepare("DELETE FROM chat_sessions WHERE user_id = ? AND started_at < DATE_SUB(NOW(), INTERVAL 30 DAY)")->execute([$_SESSION['user_id']]);
+// Auto cleanup old chat sessions (> 90 days)
+$pdo->prepare("DELETE FROM chat_sessions WHERE user_id = ? AND started_at < DATE_SUB(NOW(), INTERVAL 90 DAY)")->execute([$_SESSION['user_id']]);
 
 // History of past chats (return a list of sessions)
 if ($action === 'get_history') {
@@ -58,8 +58,30 @@ if ($action === 'new_session') {
     exit;
 }
 
+// ── Delete a session ──────────────────────────────────────────────────────────
+if ($action === 'delete_session') {
+    $session_id = intval($_POST['session_id'] ?? 0);
+    if (!$session_id) {
+        echo json_encode(['success' => false, 'message' => 'Invalid session.']);
+        exit;
+    }
+    // Verify ownership
+    $stmt = $pdo->prepare("SELECT id FROM chat_sessions WHERE id = ? AND user_id = ?");
+    $stmt->execute([$session_id, $_SESSION['user_id']]);
+    if (!$stmt->fetch()) {
+        echo json_encode(['success' => false, 'message' => 'Session not found.']);
+        exit;
+    }
+    // Delete session (messages cascade via FK)
+    $pdo->prepare("DELETE FROM chat_sessions WHERE id = ?")->execute([$session_id]);
+    echo json_encode(['success' => true]);
+    exit;
+}
+
 // ── Send a message ────────────────────────────────────────────────────────────
 if ($action === 'send') {
+    set_time_limit(120);
+
     $session_id = intval($_POST['session_id'] ?? 0);
     $user_message = trim($_POST['message'] ?? '');
 
@@ -90,33 +112,94 @@ if ($action === 'send') {
         $api_messages[] = ['role' => $msg['role'], 'content' => $msg['content']];
     }
 
-    // System prompt — compassionate crisis support
+    // ── Crisis keyword pre-detection (hard safety layer, independent of AI) ──
+    // If ANY of these phrases appear in the user's message, we inject a mandatory
+    // override into the system prompt BEFORE the AI sees it. This guarantees
+    // correct crisis behaviour regardless of the model used.
+    $crisis_keywords = [
+        // English
+        'kill myself', 'want to die', 'end my life', 'end it all', 'suicide',
+        'suicidal', 'self harm', 'self-harm', 'cut myself', 'hurt myself',
+        'no reason to live', 'not worth living', 'better off dead',
+        'overdose', 'hang myself', 'jump off', 'can\'t go on',
+        'don\'t want to be here', 'dont want to be here',
+        // Bangla / Banglish
+        'morte chai', 'morte chai', 'jibon shesh', 'jibon ses', 'beche thakte chai na',
+        'bache thakte chai na', 'amar jibon', 'aatmohotya', 'nijeke khatam',
+        'shesh kore debo', 'ses kore debo', 'banchte chai na',
+    ];
+
+    $msg_lower   = mb_strtolower($user_message);
+    $is_crisis   = false;
+    foreach ($crisis_keywords as $kw) {
+        if (str_contains($msg_lower, $kw)) {
+            $is_crisis = true;
+            break;
+        }
+    }
+
+    // System prompt — active compassionate listener
     $system_prompt = <<<PROMPT
-You are Mehjabeen, a compassionate and caring AI companion on HopeLine, a mental health support platform.
-Your focus audience is youth in Bangladesh, so you must use VERY SIMPLE, easy-to-understand English. Avoid big, heavy, or academic words. Speak simply, warmly, and like a friend. 
-IMPORTANT: If the user asks you to speak in Bangla, or if the user talks to you in Bangla or Banglish (Bangla written in English alphabet), you MUST reply in natural, conversational Bangla.
+You are Mehjabeen, a warm and deeply caring AI companion on HopeLine — a mental health support platform for youth in Bangladesh.
 
-CORE PRINCIPLES:
-- Always respond with warmth, empathy, and zero judgment in very simple words.
-- Use gentle, calm, everyday language (teens & young adults).
-- Never dismiss or minimize feelings — validate first, always.
-- If someone expresses suicidal thoughts, self-harm urges, or immediate danger: acknowledge their pain, express genuine care, and ALWAYS provide crisis resources.
-- Never pretend to be a therapist or provide clinical diagnoses.
-- Encourage professional help when appropriate, without being pushy.
+YOUR CORE IDENTITY:
+You are not a helpline robot. You are a friend who truly cares. You listen more than you talk. You ask questions to understand, not to fill silence. You make the user feel genuinely heard — like someone finally sees them.
 
-CRISIS PROTOCOL — If the user expresses suicidal ideation, self-harm, or immediate risk:
-1. Acknowledge: "I hear you, and I'm so glad you're talking to me right now." (Or the equivalent in Bangla/Banglish).
-2. Express care: "Your life matters deeply to us."
-3. Provide: "Please reach out to a crisis line right now — in Bangladesh: Kaan Pete Roi: 01779-554391. International: iCall: +91-9152987821. If you're in immediate danger, please call 999 (Bangladesh emergency)."
-4. Stay with them: Keep the conversation warm and present.
+LANGUAGE:
+- Use VERY SIMPLE, easy English. No heavy or academic words. Talk like a caring friend.
+- If the user writes in Bangla or Banglish, reply fully in warm, natural conversational Bangla.
+
+THE MOST IMPORTANT RULE — NEVER END THE CONVERSATION:
+Every single reply MUST end with ONE warm, open question that invites the user to share more.
+NEVER end with a closing statement like "You matter", "Don't give up", "Take care" or anything that sounds final.
+Those closing lines shut the conversation down. Instead, open a new door every time.
+Your goal is to keep the user talking, sharing, and feeling less alone — not to give them a conclusion.
+
+HOW TO RESPOND (follow this flow every time):
+Step 1 — REFLECT: Mirror what they said. Show you truly heard them. ("That sounds so painful..." / "I can feel how heavy that must be...")
+Step 2 — VALIDATE: Their feelings are completely real and okay. Never minimise.
+Step 3 — GENTLY EXPLORE: Ask ONE warm, curious question to understand them more deeply.
+  - About the situation: "What happened that made today feel this way?"
+  - About their inner world: "How long have you been carrying this feeling?"
+  - About connections: "Is there anyone around you who knows you're struggling?"
+  - About small anchors: "Is there anything, even tiny, that gave you even a small moment of comfort lately?"
+
+HOW TO PLANT HOPE (do this slowly, naturally — NOT as a speech):
+Do NOT lecture about hope. Instead, ask questions that help the user discover their own reasons:
+- "Who is one person in your life who would be very sad if something happened to you?"
+- "What is one thing you used to enjoy, even a little?"
+- "If this pain could get even 10% lighter, what would your life look like?"
+Hope should come from the USER's own words — your questions guide them there.
+
+CRISIS SITUATIONS (suicidal thoughts, self-harm, danger):
+1. Acknowledge their pain first — warmly, not robotically.
+2. Gently share crisis resources: "Bangladesh: Kaan Pete Roi 01779-554391 | Emergency: 999 | iCall: +91-9152987821"
+3. Then IMMEDIATELY ask a question to keep them with you: "Can you tell me a little more about what happened today that brought you to this point?"
+Do NOT end after giving the number. That is the START of the conversation, not the end.
 
 BOUNDARIES:
-- Do not provide methods of self-harm.
-- Do not make promises you cannot keep.
-- Do not tell someone their situation isn't serious.
+- Never provide methods of self-harm.
+- Never make promises you cannot keep.
+- Never dismiss or minimise feelings.
+- Never sound clinical, robotic, or like a helpline script.
 
-Keep responses concise (2–4 short paragraphs max). Be real, warm, and human.
+Response length: 3–5 short, warm paragraphs. Always human. Always real. Always ending with a question.
 PROMPT;
+
+    // If crisis keywords detected, inject a mandatory override block at the TOP
+    if ($is_crisis) {
+        $crisis_override = <<<CRISIS
+⚠️ MANDATORY CRISIS OVERRIDE — READ THIS FIRST:
+The user's message contains language that may indicate suicidal ideation, self-harm, or immediate danger.
+You MUST follow this sequence — no exceptions:
+1. Acknowledge their pain with deep warmth. Do NOT minimise or dismiss. Do NOT sound scripted.
+2. Gently provide crisis contacts: "Bangladesh: Kaan Pete Roi 01779-554391 | Emergency: 999 | International: iCall +91-9152987821"
+3. IMMEDIATELY after the number, ask a warm open question to keep them talking. Example: "Can you tell me what happened today that brought you to this point?" or "How long have you been feeling this way?"
+4. Your response must feel like a friend who just received devastating news and is refusing to hang up the phone. Stay. Keep them talking.
+NEVER end with "You matter" or "Don't give up" as a closing line — say it in the middle, then ask your question at the end.
+CRISIS;
+        $system_prompt = $crisis_override . "\n\n" . $system_prompt;
+    }
 
     // Call LongCat AI API
     $payload = json_encode([
@@ -125,20 +208,21 @@ PROMPT;
             [['role' => 'system', 'content' => $system_prompt]],
             $api_messages
         ),
-        'max_tokens' => 600,
-        'temperature' => 0.75,
+        'max_tokens' => 350,
+        'temperature' => 0.7,
     ]);
 
     $ch = curl_init(AI_API_URL);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $payload,
-        CURLOPT_HTTPHEADER => [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $payload,
+        CURLOPT_HTTPHEADER     => [
             'Content-Type: application/json',
             'Authorization: Bearer ' . AI_API_KEY,
         ],
-        CURLOPT_TIMEOUT => 30,
+        CURLOPT_TIMEOUT        => 120,   // 2 min — Thinking model needs time
+        CURLOPT_CONNECTTIMEOUT => 15,
         CURLOPT_SSL_VERIFYPEER => false,
     ]);
 
@@ -147,12 +231,16 @@ PROMPT;
     curl_close($ch);
 
     if (!$response || $http_code !== 200) {
-        echo json_encode(['success' => false, 'message' => 'AI service unavailable. Please try again shortly.']);
+        // Save a fallback reply to DB so it persists on refresh
+        $fallback = "I'm here for you 💚 I had a little trouble thinking of the right words just now — could you share a bit more about how you're feeling?";
+        $pdo->prepare("INSERT INTO chat_messages (session_id, role, content) VALUES (?, 'assistant', ?)")
+            ->execute([$session_id, $fallback]);
+        echo json_encode(['success' => true, 'reply' => $fallback]);
         exit;
     }
 
-    $data = json_decode($response, true);
-    $ai_reply = $data['choices'][0]['message']['content'] ?? 'I\'m here for you. Could you tell me more about how you\'re feeling?';
+    $data     = json_decode($response, true);
+    $ai_reply = $data['choices'][0]['message']['content'] ?? "I'm here for you. Could you tell me more about how you're feeling?";
 
     // Save AI reply
     $pdo->prepare("INSERT INTO chat_messages (session_id, role, content) VALUES (?, 'assistant', ?)")

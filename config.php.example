@@ -13,7 +13,7 @@ define('DB_PASS', ''); // Default XAMPP has no password
 // Get your key from your LongCat dashboard
 define('AI_API_KEY', 'YOUR_API_KEY_HERE'); 
 define('AI_API_URL', 'https://api.longcat.chat/openai/v1/chat/completions');
-define('AI_MODEL', 'LongCat-Flash-Thinking-2601'); 
+define('AI_MODEL', 'LongCat-Flash-Chat'); // Fast conversational model — recommended
 
 // Session Configuration
 define('SESSION_NAME', 'hopeline_sess');
