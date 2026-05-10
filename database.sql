@@ -130,3 +130,15 @@ CREATE TABLE safety_plans (
     UNIQUE(user_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- Follow-up check-ins (scheduled after crisis conversations)
+CREATE TABLE checkins (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    trigger_session_id INT DEFAULT NULL,
+    due_at DATETIME NOT NULL,
+    delivered_at DATETIME DEFAULT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (trigger_session_id) REFERENCES chat_sessions(id) ON DELETE SET NULL
+);

@@ -182,6 +182,40 @@ if (!is_logged_in()) {
     }
 
     /* ═══════════════════════════════════════════════
+       CHECK-IN BANNER
+    ═══════════════════════════════════════════════ */
+    .checkin-banner {
+      background: linear-gradient(135deg, var(--sage), var(--sage-deep));
+      color: var(--white);
+      padding: 12px 24px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      font-size: 14px;
+      animation: slideDown 0.4s ease;
+      position: sticky;
+      top: 62px; /* right below topnav (which is at 36px) or adjusted for app */
+      z-index: 95;
+    }
+
+    .checkin-banner .btn-checkin {
+      background: var(--white);
+      color: var(--sage-deep);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      transition: transform 0.2s;
+    }
+
+    .checkin-banner .btn-checkin:hover {
+      transform: scale(1.05);
+    }
+
+    /* ═══════════════════════════════════════════════
    AUTH SCREEN
 ═══════════════════════════════════════════════ */
     #auth-screen {
@@ -1479,6 +1513,11 @@ if (!is_logged_in()) {
       }
     }
 
+    @keyframes slideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
     @keyframes typing {
 
       0%,
@@ -2192,6 +2231,13 @@ if (!is_logged_in()) {
      MAIN APP
 ════════════════════════════════════════════════ -->
   <div id="app">
+
+    <!-- Check-in Banner -->
+    <div id="checkin-banner" class="checkin-banner">
+      <span>🌸 Mehjabeen is thinking about you. Would you like to check in?</span>
+      <button class="btn-checkin" onclick="deliverCheckin()">Yes, let's talk</button>
+      <button class="btn-checkin" style="background:none;color:white;opacity:0.8;" onclick="this.parentElement.style.display='none'">Not now</button>
+    </div>
 
     <nav class="topnav">
       <div class="topnav-brand">🌿 <span>HopeLine</span></div>
@@ -2945,6 +2991,33 @@ if (!is_logged_in()) {
       loadForum();
       loadSafetyPlan();
       checkPeerStatus();
+
+      // Check for pending check-in
+      if (currentUser.pending_checkin) {
+        document.getElementById('checkin-banner').style.display = 'flex';
+      }
+    }
+
+    async function deliverCheckin() {
+      const banner = document.getElementById('checkin-banner');
+      banner.innerHTML = '<span>🌸 Preparing your check-in...</span>';
+      
+      const fd = new FormData();
+      fd.append('action', 'deliver_checkin');
+      fd.append('checkin_id', currentUser.pending_checkin);
+      
+      const res = await postForm('chat.php', fd);
+      if (res.success) {
+        banner.style.display = 'none';
+        chatSessionId = res.session_id;
+        showTab('chat');
+        renderChatHistory([{role:'assistant', content: res.message}]);
+        loadChatHistorySidebar();
+        showToast('Warm thoughts from Mehjabeen 💚');
+      } else {
+        banner.style.display = 'none';
+        showToast(res.message || 'Error loading check-in', true);
+      }
     }
 
     // ════════════════════════════════════════════════

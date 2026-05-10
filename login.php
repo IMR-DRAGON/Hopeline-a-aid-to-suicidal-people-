@@ -1,7 +1,11 @@
 <?php
 require_once 'config.php';
 if (is_logged_in()) {
-    header('Location: app.php');
+    if ($_SESSION['user_id'] == 1) {
+        header('Location: admin.php');
+    } else {
+        header('Location: app.php');
+    }
     exit;
 }
 ?>
@@ -281,7 +285,11 @@ if (is_logged_in()) {
 
                 if (data.success) {
                     setTimeout(() => {
-                        window.location.href = 'app.php';
+                        if (data.is_admin) {
+                            window.location.href = 'admin.php';
+                        } else {
+                            window.location.href = 'app.php';
+                        }
                     }, 1000);
                 }
             } catch (error) {

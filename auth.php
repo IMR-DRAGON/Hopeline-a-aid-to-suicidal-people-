@@ -76,7 +76,11 @@ if ($action === 'login') {
     // Update last seen
     $pdo->prepare("UPDATE users SET last_seen = NOW() WHERE id = ?")->execute([$user['id']]);
 
-    echo json_encode(['success' => true, 'message' => 'Welcome back, ' . $user['display_name'] . '!']);
+    echo json_encode([
+        'success' => true, 
+        'message' => 'Welcome back, ' . $user['display_name'] . '!',
+        'is_admin' => ($user['id'] == 1)
+    ]);
     exit;
 }
 

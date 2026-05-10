@@ -16,6 +16,7 @@ if ($action === 'list') {
                (SELECT COUNT(*) FROM forum_reactions frc WHERE frc.post_id = fp.id) as heart_count
         FROM forum_posts fp
         JOIN users u ON u.id = fp.user_id
+        WHERE fp.status = 'approved'
         ORDER BY fp.pinned DESC, fp.created_at DESC
         LIMIT 50
     ");
@@ -62,10 +63,10 @@ if ($action === 'create_post') {
         }
     }
 
-    $pdo->prepare("INSERT INTO forum_posts (user_id, title, content, is_anonymous, image_path) VALUES (?, ?, ?, ?, ?)")
+    $pdo->prepare("INSERT INTO forum_posts (user_id, title, content, is_anonymous, image_path, status) VALUES (?, ?, ?, ?, ?, 'pending')")
         ->execute([$_SESSION['user_id'], $title, $content, $is_anonymous, $image_path]);
 
-    echo json_encode(['success' => true, 'message' => 'Post shared with the community 💚']);
+    echo json_encode(['success' => true, 'message' => 'Post submitted and is waiting for admin approval 💚']);
     exit;
 }
 
@@ -76,9 +77,9 @@ if ($action === 'get_post') {
     $stmt = $pdo->prepare("
         SELECT fp.*, u.display_name, u.avatar_color,
                (SELECT COUNT(*) FROM forum_reactions frc WHERE frc.post_id = fp.id) as heart_count
-        FROM forum_posts fp JOIN users u ON u.id = fp.user_id WHERE fp.id = ?
+        FROM forum_posts fp JOIN users u ON u.id = fp.user_id WHERE fp.id = ? AND (fp.status = 'approved' OR fp.user_id = ?)
     ");
-    $stmt->execute([$post_id]);
+    $stmt->execute([$post_id, $_SESSION['user_id']]);
     $post = $stmt->fetch();
 
     if (!$post) {

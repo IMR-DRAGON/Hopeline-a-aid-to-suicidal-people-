@@ -78,7 +78,71 @@ if ($action === 'delete_session') {
     exit;
 }
 
-// ── Send a message ────────────────────────────────────────────────────────────
+// ── Deliver Check-in ──────────────────────────────────────────────────────────
+if ($action === 'deliver_checkin') {
+    $checkin_id = intval($_POST['checkin_id'] ?? 0);
+    if (!$checkin_id) {
+        echo json_encode(['success' => false, 'message' => 'Invalid check-in.']);
+        exit;
+    }
+
+    // Verify ownership and status
+    $stmt = $pdo->prepare("SELECT id FROM checkins WHERE id = ? AND user_id = ? AND delivered_at IS NULL");
+    $stmt->execute([$checkin_id, $_SESSION['user_id']]);
+    if (!$stmt->fetch()) {
+        echo json_encode(['success' => false, 'message' => 'Check-in not found or already delivered.']);
+        exit;
+    }
+
+    // Mark as delivered
+    $pdo->prepare("UPDATE checkins SET delivered_at = NOW() WHERE id = ?")->execute([$checkin_id]);
+
+    // Create a new chat session for this check-in
+    $pdo->prepare("INSERT INTO chat_sessions (user_id) VALUES (?)")->execute([$_SESSION['user_id']]);
+    $session_id = $pdo->lastInsertId();
+
+    // AI generates a warm check-in message
+    $system_prompt = "You are Mehjabeen, a warm and caring AI companion. You are checking in on your friend because they were struggling yesterday. End with a warm open question.";
+    $payload = json_encode([
+        'model' => AI_MODEL,
+        'messages' => [['role' => 'system', 'content' => $system_prompt]],
+        'max_tokens' => 150,
+        'temperature' => 0.7,
+    ]);
+
+    $ch = curl_init(AI_API_URL);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $payload,
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . AI_API_KEY,
+        ],
+        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_SSL_VERIFYPEER => false,
+    ]);
+
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $ai_reply = "Hi there 💚 I've been thinking about you. How are you feeling today?";
+    if ($response && $http_code === 200) {
+        $data = json_decode($response, true);
+        if (isset($data['choices'][0]['message']['content'])) {
+            $ai_reply = $data['choices'][0]['message']['content'];
+        }
+    }
+
+    // Save AI reply to the fresh session
+    $pdo->prepare("INSERT INTO chat_messages (session_id, role, content) VALUES (?, 'assistant', ?)")
+        ->execute([$session_id, $ai_reply]);
+
+    echo json_encode(['success' => true, 'session_id' => $session_id, 'message' => $ai_reply]);
+    exit;
+}
+
 if ($action === 'send') {
     set_time_limit(120);
 
@@ -134,6 +198,14 @@ if ($action === 'send') {
     foreach ($crisis_keywords as $kw) {
         if (str_contains($msg_lower, $kw)) {
             $is_crisis = true;
+            // Schedule a follow-up check-in for 18 hours from now
+            // Only if there isn't already a pending one to avoid spam
+            $check_stmt = $pdo->prepare("SELECT id FROM checkins WHERE user_id = ? AND delivered_at IS NULL");
+            $check_stmt->execute([$_SESSION['user_id']]);
+            if (!$check_stmt->fetch()) {
+                $pdo->prepare("INSERT INTO checkins (user_id, trigger_session_id, due_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 18 HOUR))")
+                    ->execute([$_SESSION['user_id'], $session_id]);
+            }
             break;
         }
     }
