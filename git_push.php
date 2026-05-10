@@ -4,6 +4,7 @@ header('Content-Type: text/plain');
 $gitPath = '"f:\git bash\Git\cmd\git.exe"';
 $commands = [
     "$gitPath status",
+    "$gitPath log -n 5",
     "$gitPath add .",
     "$gitPath commit -m \"Update admin dashboard and security features\"",
     "$gitPath push origin main"
